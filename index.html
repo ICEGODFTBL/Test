@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICE Obfuscator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="obfuscator.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#080808;
+  --bg2:#0e0e0e;
+  --bg3:#141414;
+  --border:#1f1f1f;
+  --border2:#2a2a2a;
+  --text:#e8e8e8;
+  --text2:#888;
+  --text3:#444;
+  --white:#fff;
+  --font:'JetBrains Mono',monospace;
+}
+
+html,body{height:100%;overflow:hidden}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  display:flex;
+  flex-direction:column;
+}
+
+/* ─── HEADER ─── */
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 28px;
+  height:52px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  background:var(--bg);
+}
+
+.brand{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+}
+
+.brand-name{
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--white);
+}
+
+.brand-ver{
+  font-size:10px;
+  font-weight:300;
+  color:var(--text3);
+  letter-spacing:1px;
+}
+
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.dot{
+  width:6px;height:6px;
+  border-radius:50%;
+  background:var(--text3);
+}
+.dot.active{background:#3a3a3a;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* ─── TOOLBAR ─── */
+.toolbar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 28px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  background:var(--bg);
+}
+
+.btn{
+  font-family:var(--font);
+  font-size:10px;
+  font-weight:500;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  padding:7px 18px;
+  border:1px solid var(--border2);
+  background:none;
+  color:var(--text2);
+  cursor:pointer;
+  transition:all .1s;
+  outline:none;
+  user-select:none;
+}
+.btn:hover{border-color:var(--text2);color:var(--text)}
+.btn:active{transform:scale(.98)}
+
+.btn-primary{
+  border-color:var(--white);
+  color:var(--white);
+  background:var(--white);
+  color:var(--bg);
+  font-weight:700;
+}
+.btn-primary:hover{background:#ddd;border-color:#ddd;color:var(--bg)}
+
+.btn-ghost{border-color:transparent}
+.btn-ghost:hover{border-color:var(--border2)}
+
+.divider{width:1px;height:20px;background:var(--border);margin:0 4px}
+
+/* ─── MAIN PANELS ─── */
+.main{
+  flex:1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  overflow:hidden;
+}
+
+.panel{
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  position:relative;
+}
+
+.panel:first-child{border-right:1px solid var(--border)}
+
+.panel-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 16px;
+  height:36px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+
+.panel-label{
+  font-size:9px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--text3);
+  font-weight:500;
+}
+
+.panel-actions{
+  display:flex;
+  gap:4px;
+}
+
+.panel-btn{
+  font-family:var(--font);
+  font-size:9px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  padding:4px 10px;
+  border:1px solid var(--border);
+  background:none;
+  color:var(--text3);
+  cursor:pointer;
+  transition:all .1s;
+  outline:none;
+}
+.panel-btn:hover{color:var(--text);border-color:var(--border2)}
+.panel-btn:active{transform:scale(.97)}
+
+.panel-btn.flash{
+  color:var(--white)!important;
+  border-color:var(--white)!important;
+}
+
+textarea{
+  flex:1;
+  background:var(--bg);
+  color:var(--text);
+  border:none;
+  outline:none;
+  font-family:var(--font);
+  font-size:11.5px;
+  line-height:1.7;
+  padding:16px 20px;
+  resize:none;
+  tab-size:2;
+  caret-color:var(--white);
+}
+textarea::placeholder{color:var(--text3)}
+textarea:focus{background:var(--bg)}
+#output{color:#bbb}
+
+/* ─── LINE COUNT OVERLAY ─── */
+.line-count{
+  position:absolute;
+  bottom:10px;
+  right:14px;
+  font-size:9px;
+  letter-spacing:1px;
+  color:var(--text3);
+  pointer-events:none;
+}
+
+/* ─── STATUS BAR ─── */
+.statusbar{
+  height:28px;
+  display:flex;
+  align-items:center;
+  padding:0 28px;
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+  gap:20px;
+}
+
+.status-item{
+  font-size:10px;
+  color:var(--text3);
+  letter-spacing:.5px;
+}
+.status-item.active{color:var(--text2)}
+.status-msg{
+  font-size:10px;
+  letter-spacing:.5px;
+  color:var(--text2);
+  margin-left:auto;
+  transition:opacity .3s;
+}
+.status-msg.err{color:#e05a5a}
+
+/* ─── COPY TOAST ─── */
+.toast{
+  position:fixed;
+  bottom:46px;
+  left:50%;
+  transform:translateX(-50%) translateY(12px);
+  background:var(--white);
+  color:var(--bg);
+  font-family:var(--font);
+  font-size:10px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  padding:8px 20px;
+  font-weight:700;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .15s,transform .15s;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:#333}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="brand-name">ICE Obfuscator</span>
+    <span class="brand-ver">v1.0 ~ icegodftbl</span>
+  </div>
+  <div class="header-right">
+    <div class="dot active"></div>
+    <div class="dot active" style="animation-delay:.4s"></div>
+    <div class="dot active" style="animation-delay:.8s"></div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="btn btn-primary" onclick="run()">Obfuscate</button>
+  <div class="divider"></div>
+  <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
+  <button class="btn btn-ghost" onclick="loadSample()">Sample</button>
+</div>
+
+<div class="main">
+  <div class="panel">
+    <div class="panel-top">
+      <span class="panel-label">Input</span>
+    </div>
+    <textarea id="input" spellcheck="false" placeholder="-- paste lua source here" oninput="updateCounts()"></textarea>
+    <div class="line-count" id="in-count">0 lines</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-top">
+      <span class="panel-label">Output</span>
+      <div class="panel-actions">
+        <button class="panel-btn" id="copy-btn" onclick="copyOutput()">Copy</button>
+        <button class="panel-btn" onclick="downloadOutput()">Download</button>
+      </div>
+    </div>
+    <textarea id="output" readonly spellcheck="false" placeholder="-- obfuscated output appears here"></textarea>
+    <div class="line-count" id="out-count">0 chars</div>
+  </div>
+</div>
+
+<div class="statusbar">
+  <span class="status-item active" id="s-vars">vars: 0</span>
+  <span class="status-item active" id="s-strs">strings: 0</span>
+  <span class="status-item active" id="s-time">—</span>
+  <span class="status-msg" id="s-msg">ready</span>
+</div>
+
+<div class="toast" id="toast">Copied</div>
+
+<script>
+const inp=document.getElementById('input');
+const out=document.getElementById('output');
+const sMsg=document.getElementById('s-msg');
+const sVars=document.getElementById('s-vars');
+const sStrs=document.getElementById('s-strs');
+const sTime=document.getElementById('s-time');
+const inCount=document.getElementById('in-count');
+const outCount=document.getElementById('out-count');
+const toast=document.getElementById('toast');
+
+function updateCounts(){
+  const lines=inp.value.split('\n').length;
+  inCount.textContent=lines+' lines';
+}
+
+function setMsg(txt,isErr=false){
+  sMsg.textContent=txt;
+  sMsg.className='status-msg'+(isErr?' err':'');
+}
+
+function run(){
+  const src=inp.value.trim();
+  if(!src){setMsg('no input');return}
+
+  const t0=performance.now();
+  let result;
+  try{
+    result=obfuscate(src);
+  }catch(e){
+    setMsg('error: '+e.message,true);
+    return
+  }
+  const ms=(performance.now()-t0).toFixed(1);
+
+  out.value=result;
+  const lines=out.value.split('\n').length;
+  outCount.textContent=result.length+' chars';
+
+  const varCount=(result.match(/\bv\d+\b/g)||[]).length;
+  const strCount=(result.match(/__d\(/g)||[]).length;
+  sVars.textContent='vars: '+varCount;
+  sStrs.textContent='strings: '+strCount;
+  sTime.textContent=ms+'ms';
+  setMsg('done');
+}
+
+function copyOutput(){
+  const val=out.value;
+  if(!val)return;
+  navigator.clipboard.writeText(val).then(()=>{
+    toast.classList.add('show');
+    const btn=document.getElementById('copy-btn');
+    btn.classList.add('flash');
+    setTimeout(()=>{
+      toast.classList.remove('show');
+      btn.classList.remove('flash');
+    },1200);
+  });
+}
+
+function downloadOutput(){
+  const val=out.value;
+  if(!val)return;
+  const b=new Blob([val],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b);
+  a.download='obfuscated.lua';
+  a.click();
+  setMsg('downloaded obfuscated.lua');
+}
+
+function clearAll(){
+  inp.value='';out.value='';
+  sVars.textContent='vars: 0';
+  sStrs.textContent='strings: 0';
+  sTime.textContent='—';
+  inCount.textContent='0 lines';
+  outCount.textContent='0 chars';
+  setMsg('ready');
+}
+
+function loadSample(){
+  inp.value=`local greeting = "Hello from ICE"\nlocal url = "https://example.com/api"\nlocal count = 10\nlocal max = 100\n\nlocal function fetch(endpoint, retries)\n  for i = 1, retries do\n    local ok, err = pcall(function()\n      game:HttpGet(endpoint)\n    end)\n    if ok then\n      print(greeting)\n      return true\n    end\n    wait(0.5)\n  end\n  return false\nend\n\nfetch(url, count)`;
+  updateCounts();
+  setMsg('sample loaded');
+}
+
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();run()}
+});
+
+updateCounts();
+</script>
+</body>
+</html>
